@@ -1,201 +1,120 @@
-# Heroku AppLink Node.js App Template
+# Data Cloud Inspector
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/heroku-reference-apps/applink-getting-started-nodejs)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://deploy.herokuapps.ai?template=https://github.com/aagnone-sfhk/data-cloud-inspector)
 
-The Heroku AppLink Node.js app template is a [Fastify](https://fastify.dev/) web application that demonstrates how to build APIs for Salesforce integration using Heroku AppLink. This template includes authentication, authorization, and API specifications for seamless integration with Salesforce, Data Cloud, and Agentforce.
+A [Fastify](https://fastify.dev/) web application that provides APIs for Salesforce and Data Cloud integration using Heroku AppLink.
 
 ## Table of Contents
 
 - [Quick Start](#quick-start)
 - [Local Development](#local-development)
-- [Testing with invoke.sh](#testing-with-invokesh)
-- [Manual Heroku Deployment](#manual-heroku-deployment)
-- [Heroku AppLink Setup](#heroku-applink-setup)
+- [API Endpoints](#api-endpoints)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Configuration](#configuration)
 - [Project Structure](#project-structure)
-- [API Documentation](#api-documentation)
-- [Additional Resources](#additional-resources)
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 20.x or later
-- npm
+- pnpm
 - Git
 - Heroku CLI (for deployment)
-- Salesforce org (for AppLink integration)
+- Salesforce CLI (for setup)
+- Salesforce org with Data Cloud (for full functionality)
 
-### Deploy to Heroku (One-Click)
+### Scripted Setup
 
-Click the Deploy button above to deploy this app directly to Heroku with the AppLink add-on pre-configured.
+**Recommended Workflow:**
 
-## Local Development
+1. **Deploy via Heroku Button** (above) - This handles:
+   - App creation with proper buildpacks
+   - Heroku AppLink addon installation
+   - Initial code deployment
 
-### 1. Clone and Install
+2. **Clone your app locally:**
 
-```bash
-git clone https://github.com/heroku-reference-apps/applink-getting-started-nodejs.git
-cd applink-getting-started-nodejs
-npm install
-```
+   ```bash
+   heroku git:clone -a <your-app-name>
+   cd <your-app-name>
+   ```
 
-### 2. Start the Development Server
-
-```bash
-# Start with auto-reload and debug logging
-npm run dev
-
-# Or start production mode
-npm start
-```
-
-Your app will be available at `http://localhost:3000`
-
-### 3. Running Tests
-
-```bash
-npm test
-```
-
-### 4. API Endpoints
-
-- **GET /accounts** - Retrieve Salesforce accounts from the invoking org
-- **POST /unitofwork** - Create a unit of work for Salesforce
-- **POST /handleDataCloudDataChangeEvent** - Handle a Salesforce Data Cloud Change Event
-- **GET /api-docs** - Interactive Swagger UI for API documentation
-- **GET /health** - Health check endpoint
-
-### 5. View API Documentation
-
-Visit `http://localhost:3000/api-docs` to explore the interactive API documentation powered by Swagger UI.
-
-## Testing locally with invoke.sh
-
-The `bin/invoke.sh` script allows you to test your locally running app with proper Salesforce client context headers.
-
-### Usage
-
-```bash
-# Set your Salesforce CLI org alias and agent email
-sf_org_alias=acme
-agentforce_agent_user_email=data_cloud_agent@00dho00000dykny.ext
-
-org_domain=$(sf org display -o $sf_org_alias --json | jq -r .result.instanceUrl | sed 's|https://||')
-access_token=$(heroku config:get HEROKU_APPLINK_TOKEN)
-org_id=$(sf org display -o $sf_org_alias --json | jq -r .result.id)
-user_id=$(sf org display user -o $sf_org_alias --json | jq -r .result.id)
-./bin/invoke.sh \
-  $org_domain \
-  $access_token \
-  $org_id \
-  $user_id \
-  [METHOD] [API_PATH] [DATA]
-```
-
-### Parameters
-
-- **ORG_DOMAIN**: Your Salesforce org domain (e.g., `mycompany.my.salesforce.com`)
-- **ACCESS_TOKEN**: Valid Salesforce access token
-- **ORG_ID**: Salesforce organization ID (15 or 18 characters)
-- **USER_ID**: Salesforce user ID (15 or 18 characters)
-- **METHOD**: HTTP method (default: GET)
-- **API_PATH**: API endpoint path (default: /accounts)
-- **DATA**: JSON data for POST/PUT requests
-
-### Examples
-
-```bash
-# Test the accounts endpoint
-./bin/invoke.sh mycompany.my.salesforce.com TOKEN_123 00D123456789ABC 005123456789ABC
-
-# Test with POST data
-./bin/invoke.sh mycompany.my.salesforce.com TOKEN_123 00D123456789ABC 005123456789ABC POST /accounts '--data "{\"name\":\"Test Account\"}"'
-
-# Test custom endpoint
-./bin/invoke.sh mycompany.my.salesforce.com TOKEN_123 00D123456789ABC 005123456789ABC GET /health
-```
-
-### Getting Salesforce Credentials
-
-To get the required Salesforce credentials for testing:
-
-1. **Access Token**: Use Salesforce CLI to generate a session token
-2. **Org ID**: Found in Setup → Company Information
-3. **User ID**: Found in your user profile or Setup → Users
-
-## Automated Deployment
-
-```bash
-./bin/fresh_app.sh <sf_org_alias> <agentforce_agent_user_email>
-```
+3. **Configure Salesforce connections:**
+   ```bash
+   ./bin/fresh_app.sh <sf_org_alias> <agentforce_agent_user_email>
+   ```
 
 **Example:**
+
 ```bash
 ./bin/fresh_app.sh acme data_cloud_agent@00dho00000dykny.ext
 ```
 
-## Manual Heroku Deployment
+The configuration script adds:
 
-If you prefer to set up the deployment manually, follow these steps:
+- Salesforce and Data Cloud connections
+- API specification publishing to Salesforce
+- Permission set assignments for users
+- Local `.env` file for development
 
-### 1. Prerequisites
+### Manual Heroku Deployment
 
-- [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) installed
-- Git repository initialized
-- Heroku account with billing enabled (for add-ons)
+If the automatic setup does not work, or you prefer to manually follow along, [follow this getting started guide](https://devcenter.heroku.com/articles/getting-started-heroku-applink-data-cloud).
 
-### 2. Create Heroku App
+
+## Configuration
+
+### Environment Variables
+
+- **DC_CONNECTION_NAME**: Data Cloud connection name (required for Data Cloud endpoints)
+- **SALESFORCE_ORG_NAME**: Salesforce org connection name (optional)
+- **DATA_CLOUD_ORG**: Data Cloud org reference (optional)
+- **DATA_CLOUD_QUERY**: Default Data Cloud query (optional)
+- **HEROKU_APP_ID**: Heroku app ID (set automatically)
+
+### Local Testing with invoke.sh
+
+Test your locally running app with proper Salesforce client context:
 
 ```bash
-heroku create data-cloud-inspector
-heroku buildpacks:add heroku/heroku-applink-service-mesh
-heroku buildpacks:add heroku/nodejs
-heroku addons:create heroku-applink
-heroku config:set HEROKU_APP_ID="$(heroku apps:info --json | jq -r '.app.id')"
-git push heroku main
+# Set your credentials
+sf_org_alias=acme
+org_domain=$(sf org display -o $sf_org_alias --json | jq -r .result.instanceUrl | sed 's|https://||')
+access_token=$(heroku config:get HEROKU_APPLINK_TOKEN)
+org_id=$(sf org display -o $sf_org_alias --json | jq -r .result.id)
+user_id=$(sf org display user -o $sf_org_alias --json | jq -r .result.id)
+
+# Test endpoints
+./bin/invoke.sh $org_domain $access_token $org_id $user_id GET /datacloud/models
+./bin/invoke.sh $org_domain $access_token $org_id $user_id GET "/datacloud/analysis/unified-b2b?accountName=Acme"
 ```
 
-## Heroku AppLink Setup
+## Testing
 
-### 1. Install AppLink CLI Plugin
+### Run All Tests
 
 ```bash
-# Install the AppLink CLI plugin
-heroku plugins:install @heroku-cli/plugin-applink
+pnpm test
 ```
 
-### 2. Connect to Salesforce Org
+### Test Coverage
 
-```bash
-# Connect to a production org
-heroku salesforce:connect production-org --addon your-addon-name -a your-app-name
+The application includes comprehensive tests for:
 
-# Connect to a sandbox org
-heroku salesforce:connect sandbox-org --addon your-addon-name -a your-app-name --login-url https://test.salesforce.com
+- **Route handlers**: All API endpoints with various parameter combinations
+- **Service layer**: DataCloudQueryService with filter cleaning and query building
+- **Error handling**: Missing headers, malformed requests, connection failures
+- **Parameter handling**: Empty, partial, and complete filter sets
+
+### Test Structure
+
 ```
-
-### 3. Authorize a User
-
-```bash
-# Authorize a Salesforce user for API access
-heroku salesforce:authorizations:add auth-user --addon your-addon-name -a your-app-name
-```
-
-### 4. Publish Your App
-
-```bash
-# Publish the app to Salesforce as an External Service
-heroku salesforce:publish api-spec.yaml \
-  --client-name MyAPI \
-  --connection-name production-org \
-  --authorization-connected-app-name MyAppConnectedApp \
-  --authorization-permission-set-name MyAppPermissions \
-  --addon your-addon-name
-```
-
-## Reset
-
-```bash
-core_conn_name=acme
-heroku salesforce:disconnect $core_conn_name
+test/
+├── lib/
+│   └── data-cloud-query-service.test.js  # Service layer unit tests
+└── routes/
+    ├── accounts.test.js                   # Salesforce endpoints
+    └── datacloud.test.js                  # Data Cloud endpoints
 ```

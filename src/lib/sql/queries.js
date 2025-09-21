@@ -54,6 +54,7 @@ export const unifiedB2BQuery = {
 
   /**
    * Builds a dynamic query with optional filtering parameters.
+   * Uses proper SQL escaping to prevent injection attacks.
    *
    * @param {Object} filters - Optional filters to apply
    * @param {string} filters.accountName - Filter by account name (partial match)
@@ -65,17 +66,20 @@ export const unifiedB2BQuery = {
     const whereConditions = [];
 
     if (filters.accountName) {
-      whereConditions.push(`ssot__Name__c LIKE '%${filters.accountName}%'`);
+      const escapedAccountName = this.escapeSqlString(filters.accountName);
+      whereConditions.push(`ssot__Name__c LIKE '%${escapedAccountName}%'`);
     }
 
     if (filters.accountSource) {
+      const escapedAccountSource = this.escapeSqlString(filters.accountSource);
       whereConditions.push(
-        `ssot__AccountSource__c = '${filters.accountSource}'`
+        `ssot__AccountSource__c = '${escapedAccountSource}'`
       );
     }
 
     if (filters.segment) {
-      whereConditions.push(`ssot__AccountTypeId__c = '${filters.segment}'`);
+      const escapedSegment = this.escapeSqlString(filters.segment);
+      whereConditions.push(`ssot__AccountTypeId__c = '${escapedSegment}'`);
     }
 
     let query = this.baseSql;
@@ -86,6 +90,29 @@ export const unifiedB2BQuery = {
     query += ` LIMIT 100`;
 
     return query;
+  },
+
+  /**
+   * Escapes SQL string values to prevent injection attacks.
+   * Replaces single quotes with double single quotes and removes/escapes dangerous characters.
+   *
+   * @param {string} value - String value to escape
+   * @returns {string} Escaped string safe for SQL queries
+   */
+  escapeSqlString(value) {
+    if (typeof value !== 'string') {
+      return String(value);
+    }
+
+    // Replace single quotes with double single quotes (SQL standard escaping)
+    // Remove or escape other potentially dangerous characters
+    return value
+      .replace(/'/g, "''") // Escape single quotes
+      .replace(/\\/g, '\\\\') // Escape backslashes
+      .replace(/\x00/g, '') // Remove null bytes
+      .replace(/\n/g, '\\n') // Escape newlines
+      .replace(/\r/g, '\\r') // Escape carriage returns
+      .replace(/\x1a/g, '\\Z'); // Escape ctrl+Z
   },
 
   /**

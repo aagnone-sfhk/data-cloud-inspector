@@ -1,4 +1,5 @@
 import { userEngagementQuery, unifiedB2BQuery } from '../lib/sql/queries.js';
+import DataCloudQueryService from '../lib/data-cloud-query-service.js';
 
 export default async function (fastify, _opts) {
   /**
@@ -333,15 +334,12 @@ export default async function (fastify, _opts) {
       );
 
       // Build query parameters for the metadata endpoint - filter by DataModelObject
-      const queryParams = ['entityType=DataModelObject'];
-      if (entityCategory)
-        queryParams.push(
-          `entityCategory=${encodeURIComponent(entityCategory)}`
-        );
-      if (entityName)
-        queryParams.push(`entityName=${encodeURIComponent(entityName)}`);
+      const queryString = DataCloudQueryService.buildQueryParams(
+        { entityCategory, entityName },
+        ['entityType=DataModelObject']
+      );
 
-      const metadataUrl = `/api/v1/metadata?${queryParams.join('&')}`;
+      const metadataUrl = `/api/v1/metadata?${queryString}`;
 
       // Use the metadata endpoint to get the DMOs with bearer token
       const requestUrl = dcOrgAuth.domainUrl + metadataUrl;
@@ -382,37 +380,33 @@ export default async function (fastify, _opts) {
   fastify.get(
     '/datacloud/analysis/engagement',
     async function (request, reply) {
-      const { logger } = request.sdk;
-
       try {
-        // Obtain Data Cloud context from the AppLink SDK, which contains a pre-authenticated Data Cloud client
         const dcConnectionName = fastify.envConfig.dcConnectionName;
-        const dataCloudContext =
-          await request.sdk.addons.applink.getAuthorization(dcConnectionName);
-
-        const query = userEngagementQuery.sql;
-        logger.info(`Executing Data Cloud query: ${query}`);
-        const response = await dataCloudContext.dataCloudApi.query(query);
-
-        // Transform array-based records to named properties
-        const transformedRecords = userEngagementQuery.transform(
-          response.data || []
+        const queryService = DataCloudQueryService.fromRequest(
+          request,
+          dcConnectionName
         );
 
-        return {
-          records: transformedRecords,
-          metadata: {
-            totalRecords: transformedRecords.length,
-            query: query,
-            executedAt: new Date().toISOString(),
-          },
-        };
+        const result = await queryService.executeQuery(userEngagementQuery);
+
+        if (result.success) {
+          return {
+            records: result.records,
+            metadata: result.metadata,
+          };
+        } else {
+          reply.code(500).send({
+            error: result.error,
+            message: result.message,
+            query: result.query,
+          });
+        }
       } catch (err) {
-        logger.error(`Error retrieving engagement data: ${err.message}`);
+        const { logger } = request.sdk;
+        logger.error(`Unexpected error in engagement endpoint: ${err.message}`);
         reply.code(500).send({
-          error: 'Failed to retrieve engagement data',
+          error: 'Unexpected error retrieving engagement data',
           message: err.message,
-          query: userEngagementQuery.sql,
         });
       }
     }
@@ -435,48 +429,40 @@ export default async function (fastify, _opts) {
   fastify.get(
     '/datacloud/analysis/unified-b2b',
     async function (request, reply) {
-      const { logger } = request.sdk;
       const { accountName, accountSource, segment } = request.query;
 
       try {
-        // Obtain Data Cloud context from the AppLink SDK, which contains a pre-authenticated Data Cloud client
         const dcConnectionName = fastify.envConfig.dcConnectionName;
-        const dataCloudContext =
-          await request.sdk.addons.applink.getAuthorization(dcConnectionName);
-
-        // Build dynamic query with optional filters
-        const filters = {};
-        if (accountName) filters.accountName = accountName;
-        if (accountSource) filters.accountSource = accountSource;
-        if (segment) filters.segment = segment;
-
-        const query = unifiedB2BQuery.buildQuery(filters);
-        const response = await dataCloudContext.dataCloudApi.query(query);
-
-        // Transform array-based records to named properties
-        const transformedRecords = unifiedB2BQuery.transform(
-          response.data || []
-        );
-        logger.info(
-          `Transformed records: ${JSON.stringify(transformedRecords)}`
+        const queryService = DataCloudQueryService.fromRequest(
+          request,
+          dcConnectionName
         );
 
-        return {
-          records: transformedRecords,
-          metadata: {
-            totalRecords: transformedRecords.length,
-            query: query,
-            filters: filters,
-            executedAt: new Date().toISOString(),
-          },
-        };
+        const result = await queryService.executeQueryWithFilters(
+          unifiedB2BQuery,
+          { accountName, accountSource, segment }
+        );
+
+        if (result.success) {
+          return {
+            records: result.records,
+            metadata: result.metadata,
+          };
+        } else {
+          reply.code(500).send({
+            error: result.error,
+            message: result.message,
+            query: result.query,
+          });
+        }
       } catch (err) {
-        logger.error(`Error retrieving unified B2B data: ${err.message}`);
-        const fallbackQuery = unifiedB2BQuery.buildQuery();
+        const { logger } = request.sdk;
+        logger.error(
+          `Unexpected error in unified B2B endpoint: ${err.message}`
+        );
         reply.code(500).send({
-          error: 'Failed to retrieve unified B2B data',
+          error: 'Unexpected error retrieving unified B2B data',
           message: err.message,
-          query: fallbackQuery,
         });
       }
     }

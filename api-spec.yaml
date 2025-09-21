@@ -1,0 +1,329 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Data Cloud Inspector
+  description: Service for inspecting Salesforce Data Cloud data and metadata.
+servers:
+  - url: http://127.0.0.1:3000
+x-sfdc:
+  agent:
+    topic:
+      classificationDescription: This topic enables analysis of Salesforce Data Cloud data, schema, and metadata.
+      scope: Your job is to assist users in analyzing Salesforce Data Cloud data, schema, and metadata.
+      instructions:
+        - Use your actions to inspect the Data Cloud's data and metadata.
+        - Help the user understand the Data Cloud's data and metadata.
+        - NEVER update data or metadata.
+      name: data_cloud_inspector_v4
+paths:
+  /datacloud/models:
+    get:
+      operationId: GetDataCloudModelObjects
+      description: Returns information on the Data Cloud's DMOs
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: 'DataCloudInspector'
+            permissionSet: 'DataCloudInspectorPS'
+        agent:
+          action:
+            publishAsAgentAction: true
+            isUserInput: true
+            isDisplayable: true
+      parameters:
+        - name: space
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "default"
+      responses:
+        '200':
+          description: Successfully returned the Data Cloud's DMOs
+          content:
+            application/json:
+              schema:
+                x-sfdc:
+                  agent:
+                    action:
+                      isDisplayable: true
+                type: object
+                properties:
+                  models:
+                    type: array
+                    items:
+                      type: object
+                      description: A Data Cloud Model
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+  /datacloud/analysis/engagement:
+    get:
+      operationId: GetEngagementAnalysis
+      description: Returns user engagement data from Data Cloud UserEngagement__dlm table
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: 'DataCloudInspector'
+            permissionSet: 'DataCloudInspectorPS'
+        agent:
+          action:
+            publishAsAgentAction: true
+            isUserInput: true
+            isDisplayable: true
+      parameters:
+        - name: space
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "default"
+      responses:
+        '200':
+          description: Successfully returned user engagement data
+          content:
+            application/json:
+              schema:
+                x-sfdc:
+                  agent:
+                    action:
+                      isDisplayable: true
+                type: object
+                properties:
+                  records:
+                    type: array
+                    items:
+                      type: object
+                      description: A user engagement record
+                      properties:
+                        clientSession:
+                          type: string
+                        createdDate:
+                          type: string
+                        entityType:
+                          type: string
+                        eventIdentifier:
+                          type: string
+                        eventName:
+                          type: string
+                  metadata:
+                    type: object
+                    properties:
+                      totalRecords:
+                        type: integer
+                      query:
+                        type: string
+                      executedAt:
+                        type: string
+        '500':
+          description: Error retrieving engagement data
+          content:
+            application/json:
+              schema:
+                x-sfdc:
+                  agent:
+                    action:
+                      isDisplayable: true
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                  query:
+                    type: string
+  /datacloud/analysis/unified-b2b:
+    get:
+      operationId: GetUnifiedB2BAnalysis
+      description: |
+        Returns unified B2B account data from Data Cloud UnifiedssotAccountB2b__dlm table with optional filtering.
+        Use these values for searching different segments:
+        - Mid-Market: 'Mid-Market'
+        - SMB: 'Small Business'
+        - Enterprise: 'Enterprise'
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: 'DataCloudInspector'
+            permissionSet: 'DataCloudInspectorPS'
+        agent:
+          action:
+            publishAsAgentAction: true
+            isUserInput: true
+            isDisplayable: true
+      parameters:
+        - name: space
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "default"
+        - name: accountName
+          in: query
+          required: false
+          description: Filter by account name (partial match)
+          schema:
+            type: string
+        - name: accountSource
+          in: query
+          required: false
+          description: Filter by account source (exact match)
+          schema:
+            type: string
+        - name: segment
+          in: query
+          required: false
+          description: Filter by account type/segment (exact match)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully returned unified B2B account data
+          content:
+            application/json:
+              schema:
+                x-sfdc:
+                  agent:
+                    action:
+                      isDisplayable: true
+                type: object
+                properties:
+                  records:
+                    type: array
+                    items:
+                      type: object
+                      description: A unified B2B account record
+                      properties:
+                        name:
+                          type: string
+                        number:
+                          type: string
+                        accountSource:
+                          type: string
+                        accountTypeId:
+                          type: string
+                        createdDate:
+                          type: string
+                        lastModifiedDate:
+                          type: string
+                        parentAccountId:
+                          type: string
+                        id:
+                          type: string
+                  metadata:
+                    type: object
+                    properties:
+                      totalRecords:
+                        type: integer
+                      query:
+                        type: string
+                      filters:
+                        type: object
+                        properties:
+                          accountName:
+                            type: string
+                          accountSource:
+                            type: string
+                          segment:
+                            type: string
+                      executedAt:
+                        type: string
+        '500':
+          description: Error retrieving unified B2B data
+          content:
+            application/json:
+              schema:
+                x-sfdc:
+                  agent:
+                    action:
+                      isDisplayable: true
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                  query:
+                    type: string
+  /accounts:
+    get:
+      operationId: GetAccounts
+      description: Returns a list of Accounts
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: 'DataCloudInspector'
+            permissionSet: 'DataCloudInspectorPS'
+      responses:
+        '200':
+          description: Successfully returned a list of Accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+  /unitofwork:
+    post:
+      operationId: UnitOfWork
+      description:
+        Receives a payload containing Account, Contact, and Case details and uses the
+        Unit of Work pattern to assign the corresponding values to to its Record
+        while maintaining the relationships. It then commits the unit of work and
+        returns the Record Id's for each object.
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: 'DataCloudInspector'
+            permissionSet: 'DataCloudInspectorPS'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accountName:
+                  type: string
+                lastName:
+                  type: string
+                subject:
+                  type: string
+                callbackUrl:
+                  type: string
+      responses:
+        '201':
+          description: Received UnitOfWork API request
+      callbacks:
+        unitOfWorkResponse:
+          '{$request.body#/callbackUrl}':
+            post:
+              description: Response from /unitofwork API
+              operationId: unitOfWorkResponseCallback
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        accountId:
+                          type: string
+                        contactId:
+                          type: string
+                        cases:
+                          type: object
+                          properties:
+                            serviceCaseId:
+                              type: string
+                            followupCaseId:
+                              type: string
+              responses:   # Expected responses to the callback message
+                '200':
+                  description: Your server returns this code if it accepts the callback

@@ -1,0 +1,26 @@
+{
+  "name": "Data Cloud Inspector",
+  "description": "Foundational Heroku application w/ AppLink to enable simple exploratory data analysis w/ Salesforce Data Cloud",
+  "repository": "https://github.com/aagnone-sfhk/data-cloud-inspector",
+  "keywords": [
+    "node",
+    "fastify",
+    "applink",
+    "salesforce",
+    "datacloud",
+    "swagger"
+  ],
+  "addons": [
+    {
+      "plan": "heroku-applink"
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/heroku-applink-service-mesh"
+    },
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}

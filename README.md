@@ -1,6 +1,8 @@
 # Data Cloud Inspector
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://deploy.herokuapps.ai?template=https://github.com/aagnone-sfhk/data-cloud-inspector)
+<a href="https://deploy.herokuapps.ai?template=https://github.com/aagnone-sfhk/data-cloud-inspector">
+    <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy to Heroku">
+</a>
 
 A [Fastify](https://fastify.dev/) web application that provides APIs for Salesforce and Data Cloud integration using Heroku AppLink.
 

@@ -5,6 +5,8 @@ set -euo pipefail
 sf_org_alias=""
 agentforce_agent_user_email=""
 heroku_app_name=""
+api_client_name="MyDataCloudInspector"
+permission_set_name="MyDataCloudInspectorPS"
 
 usage() {
     cat << EOF
@@ -162,10 +164,10 @@ publish_api_spec() {
     
     # Publish the API specification
     heroku salesforce:publish api-spec.yaml \
-        --client-name DataCloudInspector \
+        --client-name $api_client_name \
         --connection-name "sf-$sf_org_alias" \
-        --authorization-connected-app-name DataCloudInspector \
-        --authorization-permission-set-name DataCloudInspectorPS \
+        --authorization-connected-app-name $api_client_name \
+        --authorization-permission-set-name $permission_set_name \
         -a "$heroku_app_name"
     
     echo "✅ API specification published to Salesforce"
@@ -176,11 +178,11 @@ assign_permissions() {
     echo "🔐 Assigning permission sets..."
     
     # Assign the permission set to your user (as authenticated by the Salesforce CLI)
-    sf org assign permset --name DataCloudInspectorPS -o "$sf_org_alias"
+    sf org assign permset --name $permission_set_name -o "$sf_org_alias"
     echo "✅ Permission set assigned to your user"
     
     # Assign the permission set to the Agentforce agent user
-    sf org assign permset -o "$sf_org_alias" -n DataCloudInspectorPS -b "$agentforce_agent_user_email"
+    sf org assign permset -o "$sf_org_alias" -n $permission_set_name -b "$agentforce_agent_user_email"
     echo "✅ Permission set assigned to Agentforce agent user"
 }
 

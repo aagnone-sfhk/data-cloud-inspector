@@ -41,6 +41,8 @@ A [Fastify](https://fastify.dev/) web application that provides APIs for Salesfo
    ```bash
    heroku git:clone -a <your-app-name>
    cd <your-app-name>
+   git remote add origin git@github.com:aagnone-sfhk/data-cloud-inspector.git
+   git pull origin main
    ```
 
 3. **Configure Salesforce connections:**

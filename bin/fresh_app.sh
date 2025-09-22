@@ -125,6 +125,10 @@ configure_app() {
     echo ""
     echo "⚙️  Configuring app settings..."
     
+    # Set the Heroku app ID for tracking
+    heroku config:set HEROKU_APP_ID="$(heroku apps:info --json | jq -r '.app.id')"
+    echo "✅ Set HEROKU_APP_ID for tracking"
+    
     # Set the Data Cloud connection name to match what we'll create
     heroku config:set DC_CONNECTION_NAME="auth-dc-$sf_org_alias" -a "$heroku_app_name"
     echo "✅ Set DC_CONNECTION_NAME=auth-dc-$sf_org_alias"
